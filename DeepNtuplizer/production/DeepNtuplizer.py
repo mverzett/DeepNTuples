@@ -24,10 +24,9 @@ options.register(
 if hasattr(sys, "argv"):
     options.parseArguments()
 
-
-
-
-process = cms.Process("DNNFiller")
+from Configuration.StandardSequences.Eras import eras
+process = cms.Process("DNNFiller", eras.phase1Pixel)
+#process.add_(cms.Service("Tracer")) 
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load("Configuration.EventContent.EventContent_cff")
@@ -45,7 +44,6 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.options = cms.untracked.PSet(
-   allowUnscheduled = cms.untracked.bool(True),  
    wantSummary=cms.untracked.bool(False)
 )
 
@@ -79,7 +77,7 @@ process.maxEvents  = cms.untracked.PSet(
 bTagInfos = [
 	'pfImpactParameterTagInfos',
 	'pfInclusiveSecondaryVertexFinderTagInfos',
-	'deepNNTagInfos',
+	'pfDeepCSVTagInfos',
 ]
 bTagDiscriminators = [
 	'softPFMuonBJetTags',
@@ -87,11 +85,11 @@ bTagDiscriminators = [
 	'pfJetBProbabilityBJetTags',
 	'pfJetProbabilityBJetTags',
 	'pfCombinedInclusiveSecondaryVertexV2BJetTags',
-	'deepFlavourJetTags:probudsg', #to be fixed with new names
-	'deepFlavourJetTags:probb', 
-	'deepFlavourJetTags:probc', 
-	'deepFlavourJetTags:probbb', 
-	'deepFlavourJetTags:probcc',
+	'pfDeepCSVJetTags:probudsg', #to be fixed with new names
+	'pfDeepCSVJetTags:probb', 
+	'pfDeepCSVJetTags:probc', 
+	'pfDeepCSVJetTags:probbb', 
+	#'pfDeepCSVJetTags:probcc',
 ]
 jetCorrectionsAK4 = ('AK4PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'], 'None')
 
@@ -173,5 +171,16 @@ process.load("DeepNTuples.DeepNtuplizer.DeepNtuplizer_cfi")
 process.deepntuplizer.jets = cms.InputTag('selectedUpdatedPatJetsDeepFlavour');
 process.deepntuplizer.bDiscriminators = bTagDiscriminators 
 process.deepntuplizer.gluonReduction  = cms.double(options.gluonReduction)
+process.deepntuplizer.tagInfoName = 'pfDeepCSV'
 
-process.p = cms.Path(process.QGTagger + process.genJetSequence*  process.deepntuplizer)
+process.tsk = cms.Task()
+for mod in process.producers_().itervalues():
+    process.tsk.add(mod)
+for mod in process.filters_().itervalues():
+    process.tsk.add(mod)
+
+process.p = cms.Path(
+#    process.genJetSequence*
+    process.deepntuplizer,
+    process.tsk
+)
