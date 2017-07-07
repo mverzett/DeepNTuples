@@ -20,4 +20,5 @@ deepntuplizer = cms.EDAnalyzer('DeepNtuplizer',
                                 gluonReduction = cms.double(0.0),
                                 tagInfoName = cms.string('deepNN'),
                                 bDiscriminators = cms.vstring(),
+                                nCollinear = cms.uint32(0), #no splitting
                                 )
